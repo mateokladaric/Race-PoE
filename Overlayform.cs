@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -30,6 +30,24 @@ namespace RacePoE
 		[System.Runtime.InteropServices.DllImport("user32.dll")]
 		private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
 
+		// pinvoke getwindowrect
+		[System.Runtime.InteropServices.DllImport("user32.dll")]
+		private static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+
+		// pinvoke hotkeys
+		[System.Runtime.InteropServices.DllImport("user32.dll")]
+		private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+
+		[System.Runtime.InteropServices.DllImport("user32.dll")]
+		private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+		[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
+		private struct RECT
+		{
+			public int Left, Top, Right, Bottom;
+			public Rectangle ToRectangle() => Rectangle.FromLTRB(Left, Top, Right, Bottom);
+		}
+
 		// Consts
 		private const uint SWP_NOSIZE = 0x0001;
 		private const uint SWP_NOMOVE = 0x0002;
@@ -37,6 +55,19 @@ namespace RacePoE
 		private const int SW_SHOWNOACTIVATE = 4;
 		private const int SW_HIDE = 0;
 		private static readonly IntPtr HWND_TOPMOST = new IntPtr(-1);
+
+		// Hotkey consts
+		private const int WM_HOTKEY = 0x0312;
+		private const int HOTKEY_SCALE_UP = 1;
+		private const int HOTKEY_SCALE_DOWN = 2;
+		private const uint VK_ADD = 0x6B;
+		private const uint VK_SUBTRACT = 0x6D;
+
+		// Scale
+		private float _scale = 1.0f;
+		private const float ScaleStep = 0.1f;
+		private const float ScaleMin = 0.5f;
+		private const float ScaleMax = 2.0f;
 
 		// Fonts
 		private readonly Font _playerFont = new Font("Fontin", 22, FontStyle.Bold);
@@ -71,6 +102,9 @@ namespace RacePoE
 		private long _xpStartValue = -1;
 		private DateTime _xpStartTime;
 
+		// Screen tracking
+		private Rectangle _currentScreenBounds;
+
 		// Ladder tracking
 		private LadderTracker _ladderTracker;
 		private CancellationTokenSource _ladderCts;
@@ -93,6 +127,7 @@ namespace RacePoE
 			this.TopMost = true;
 			this.StartPosition = FormStartPosition.Manual;
 			this.Bounds = Screen.PrimaryScreen.Bounds;
+			this._currentScreenBounds = Screen.PrimaryScreen.Bounds;
 			this.ShowInTaskbar = false;
 			this.DoubleBuffered = true;
 			this.Show();
@@ -100,6 +135,10 @@ namespace RacePoE
 
 		private void Overlayform_Load(object sender, EventArgs e)
 		{
+			// Register numpad +/- as global hotkeys
+			RegisterHotKey(this.Handle, HOTKEY_SCALE_UP, 0, VK_ADD);
+			RegisterHotKey(this.Handle, HOTKEY_SCALE_DOWN, 0, VK_SUBTRACT);
+
 			// Start ladder tracker
 			_ladderTracker = new LadderTracker(CharacterName, LeagueName);
 			_ladderCts = new CancellationTokenSource();
@@ -144,6 +183,17 @@ namespace RacePoE
 
 					this.Invoke((MethodInvoker)delegate
 					{
+						// Match overlay to whichever screen PoE is on
+						if (GetWindowRect(poeWindow, out RECT poeRect))
+						{
+							var poeScreen = Screen.FromRectangle(poeRect.ToRectangle());
+							if (poeScreen.Bounds != _currentScreenBounds)
+							{
+								_currentScreenBounds = poeScreen.Bounds;
+								this.Bounds = _currentScreenBounds;
+							}
+						}
+
 						if (!_isVisible)
 						{
 							ShowWindow(this.Handle, SW_SHOWNOACTIVATE);
@@ -159,6 +209,25 @@ namespace RacePoE
 					System.Threading.Thread.Sleep(50);
 				}
 			});
+		}
+
+		protected override void WndProc(ref Message m)
+		{
+			if (m.Msg == WM_HOTKEY)
+			{
+				int id = m.WParam.ToInt32();
+				if (id == HOTKEY_SCALE_UP)
+				{
+					_scale = Math.Min(_scale + ScaleStep, ScaleMax);
+					this.Invalidate();
+				}
+				else if (id == HOTKEY_SCALE_DOWN)
+				{
+					_scale = Math.Max(_scale - ScaleStep, ScaleMin);
+					this.Invalidate();
+				}
+			}
+			base.WndProc(ref m);
 		}
 
 		private string FormatXpRate(double xpPerHour)
@@ -179,6 +248,9 @@ namespace RacePoE
 			var g = e.Graphics;
 			g.SmoothingMode = SmoothingMode.AntiAlias;
 			g.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAliasGridFit;
+
+			// Apply scale transform — all drawing scales uniformly from top-left
+			g.ScaleTransform(_scale, _scale);
 
 			if (_ladderTracker == null)
 				return;
@@ -403,6 +475,8 @@ namespace RacePoE
 		{
 			if (disposing)
 			{
+				UnregisterHotKey(this.Handle, HOTKEY_SCALE_UP);
+				UnregisterHotKey(this.Handle, HOTKEY_SCALE_DOWN);
 				_ladderCts?.Cancel();
 				_refreshTimer?.Dispose();
 				_playerFont?.Dispose();
