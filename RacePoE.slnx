@@ -1,0 +1,9 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+  </Configurations>
+  <Project Path="RacePoE.csproj" Id="e1f2e46f-f318-4c48-9c65-a09bef5c7dc6">
+    <Platform Solution="*|x64" Project="x64" />
+  </Project>
+</Solution>
