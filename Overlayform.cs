@@ -41,6 +41,16 @@ namespace RacePoE
 		[System.Runtime.InteropServices.DllImport("user32.dll")]
 		private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
 
+		// pinvoke for drag support
+		[System.Runtime.InteropServices.DllImport("user32.dll")]
+		private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+		[System.Runtime.InteropServices.DllImport("user32.dll")]
+		private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+		[System.Runtime.InteropServices.DllImport("user32.dll")]
+		private static extern short GetAsyncKeyState(int vKey);
+
 		[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)]
 		private struct RECT
 		{
@@ -62,6 +72,12 @@ namespace RacePoE
 		private const int HOTKEY_SCALE_DOWN = 2;
 		private const uint VK_ADD = 0x6B;
 		private const uint VK_SUBTRACT = 0x6D;
+
+		// Drag consts
+		private const int GWL_EXSTYLE = -20;
+		private const int WS_EX_TRANSPARENT_FLAG = 0x00000020;
+		private const int VK_CONTROL = 0x11;
+		private const int VK_MENU = 0x12; // ALT
 
 		// Scale
 		private float _scale = 1.0f;
@@ -102,13 +118,22 @@ namespace RacePoE
 		private long _xpStartValue = -1;
 		private DateTime _xpStartTime;
 
-		// Screen tracking
-		private Rectangle _currentScreenBounds;
-
 		// Ladder tracking
 		private LadderTracker _ladderTracker;
 		private CancellationTokenSource _ladderCts;
 		private readonly System.Windows.Forms.Timer _refreshTimer = new System.Windows.Forms.Timer();
+		private readonly System.Windows.Forms.Timer _dragCheckTimer = new System.Windows.Forms.Timer();
+
+		// Panel position (draggable)
+		private float _panelOffsetX;
+		private float _panelOffsetY;
+
+		// Drag state
+		private bool _dragging = false;
+		private Point _dragStartMouse;
+		private float _dragStartPanelX;
+		private float _dragStartPanelY;
+		private bool _clickThroughDisabled = false;
 
 		// public
 		public string CharacterName { get; set; }
@@ -126,8 +151,15 @@ namespace RacePoE
 			this.TransparencyKey = Color.FromArgb(1, 1, 1);
 			this.TopMost = true;
 			this.StartPosition = FormStartPosition.Manual;
-			this.Bounds = Screen.PrimaryScreen.Bounds;
-			this._currentScreenBounds = Screen.PrimaryScreen.Bounds;
+
+			// Span the entire virtual screen so the panel can be dragged to any monitor
+			var virtualScreen = SystemInformation.VirtualScreen;
+			this.Bounds = virtualScreen;
+
+			// Default panel position: 14px from the top-left of the primary monitor
+			_panelOffsetX = -virtualScreen.X + 14;
+			_panelOffsetY = -virtualScreen.Y + 14;
+
 			this.ShowInTaskbar = false;
 			this.DoubleBuffered = true;
 			this.Show();
@@ -149,6 +181,11 @@ namespace RacePoE
 			_refreshTimer.Tick += (s, ev) => { if (_isVisible) this.Invalidate(); };
 			_refreshTimer.Start();
 
+			// Check CTRL+ALT state frequently for responsive drag activation
+			_dragCheckTimer.Interval = 50;
+			_dragCheckTimer.Tick += (s, ev) => UpdateClickThrough();
+			_dragCheckTimer.Start();
+
 			Task.Run(() =>
 			{
 				while (true)
@@ -169,7 +206,8 @@ namespace RacePoE
 
 					if (!poeIsForeground)
 					{
-						if (_isVisible)
+						// Don't hide when in drag mode (CTRL+ALT held)
+						if (_isVisible && !_clickThroughDisabled)
 						{
 							this.Invoke((MethodInvoker)delegate
 							{
@@ -183,17 +221,6 @@ namespace RacePoE
 
 					this.Invoke((MethodInvoker)delegate
 					{
-						// Match overlay to whichever screen PoE is on
-						if (GetWindowRect(poeWindow, out RECT poeRect))
-						{
-							var poeScreen = Screen.FromRectangle(poeRect.ToRectangle());
-							if (poeScreen.Bounds != _currentScreenBounds)
-							{
-								_currentScreenBounds = poeScreen.Bounds;
-								this.Bounds = _currentScreenBounds;
-							}
-						}
-
 						if (!_isVisible)
 						{
 							ShowWindow(this.Handle, SW_SHOWNOACTIVATE);
@@ -209,6 +236,76 @@ namespace RacePoE
 					System.Threading.Thread.Sleep(50);
 				}
 			});
+		}
+
+		/// <summary>
+		/// Toggles WS_EX_TRANSPARENT on/off based on whether CTRL+ALT are held,
+		/// allowing the overlay to receive mouse input for dragging.
+		/// Shows the overlay even when PoE is not foreground while dragging.
+		/// </summary>
+		private void UpdateClickThrough()
+		{
+			bool ctrlAltHeld = (GetAsyncKeyState(VK_CONTROL) & 0x8000) != 0
+							&& (GetAsyncKeyState(VK_MENU) & 0x8000) != 0;
+
+			if (ctrlAltHeld && !_clickThroughDisabled)
+			{
+				int exStyle = GetWindowLong(this.Handle, GWL_EXSTYLE);
+				SetWindowLong(this.Handle, GWL_EXSTYLE, exStyle & ~WS_EX_TRANSPARENT_FLAG);
+				_clickThroughDisabled = true;
+				this.Cursor = Cursors.SizeAll;
+
+				// Ensure overlay is visible for dragging even if PoE isn't foreground
+				if (!_isVisible)
+				{
+					ShowWindow(this.Handle, SW_SHOWNOACTIVATE);
+					SetWindowPos(this.Handle, HWND_TOPMOST, 0, 0, 0, 0,
+						SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE);
+					_isVisible = true;
+					this.Invalidate();
+				}
+			}
+			else if (!ctrlAltHeld && _clickThroughDisabled)
+			{
+				int exStyle = GetWindowLong(this.Handle, GWL_EXSTYLE);
+				SetWindowLong(this.Handle, GWL_EXSTYLE, exStyle | WS_EX_TRANSPARENT_FLAG);
+				_clickThroughDisabled = false;
+				_dragging = false;
+				this.Cursor = Cursors.Default;
+			}
+		}
+
+		protected override void OnMouseDown(MouseEventArgs e)
+		{
+			if (e.Button == MouseButtons.Left && _clickThroughDisabled)
+			{
+				_dragging = true;
+				_dragStartMouse = e.Location;
+				_dragStartPanelX = _panelOffsetX;
+				_dragStartPanelY = _panelOffsetY;
+			}
+			base.OnMouseDown(e);
+		}
+
+		protected override void OnMouseMove(MouseEventArgs e)
+		{
+			if (_dragging)
+			{
+				// Account for scale so the drag feels 1:1 with the cursor
+				float dx = (e.X - _dragStartMouse.X) / _scale;
+				float dy = (e.Y - _dragStartMouse.Y) / _scale;
+				_panelOffsetX = _dragStartPanelX + dx;
+				_panelOffsetY = _dragStartPanelY + dy;
+				this.Invalidate();
+			}
+			base.OnMouseMove(e);
+		}
+
+		protected override void OnMouseUp(MouseEventArgs e)
+		{
+			if (e.Button == MouseButtons.Left)
+				_dragging = false;
+			base.OnMouseUp(e);
 		}
 
 		protected override void WndProc(ref Message m)
@@ -255,8 +352,8 @@ namespace RacePoE
 			if (_ladderTracker == null)
 				return;
 
-			float panelX = 14;
-			float panelY = 14;
+			float panelX = _panelOffsetX;
+			float panelY = _panelOffsetY;
 			float pad = 16;
 
 			if (_ladderTracker.LastError != null)
@@ -479,6 +576,7 @@ namespace RacePoE
 				UnregisterHotKey(this.Handle, HOTKEY_SCALE_DOWN);
 				_ladderCts?.Cancel();
 				_refreshTimer?.Dispose();
+				_dragCheckTimer?.Dispose();
 				_playerFont?.Dispose();
 				_statusFont?.Dispose();
 				_neighborFont?.Dispose();

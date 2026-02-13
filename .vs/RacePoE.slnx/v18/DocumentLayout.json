@@ -3,15 +3,11 @@
   "WorkspaceRootPath": "C:\\Users\\admin\\source\\repos\\RacePoE\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{E1F2E46F-F318-4C48-9C65-A09BEF5C7DC6}|RacePoE.csproj|c:\\users\\admin\\source\\repos\\racepoe\\.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}",
-      "RelativeMoniker": "D:0:0:{E1F2E46F-F318-4C48-9C65-A09BEF5C7DC6}|RacePoE.csproj|solutionrelative:.gitignore||{3B902123-F8A7-4915-9F01-361F908088D0}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{E1F2E46F-F318-4C48-9C65-A09BEF5C7DC6}|RacePoE.csproj|C:\\Users\\admin\\source\\repos\\RacePoE\\overlayform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E1F2E46F-F318-4C48-9C65-A09BEF5C7DC6}|RacePoE.csproj|solutionrelative:overlayform.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{E1F2E46F-F318-4C48-9C65-A09BEF5C7DC6}|RacePoE.csproj|c:\\users\\admin\\source\\repos\\racepoe\\laddertracker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "AbsoluteMoniker": "D:0:0:{E1F2E46F-F318-4C48-9C65-A09BEF5C7DC6}|RacePoE.csproj|C:\\Users\\admin\\source\\repos\\RacePoE\\laddertracker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{E1F2E46F-F318-4C48-9C65-A09BEF5C7DC6}|RacePoE.csproj|solutionrelative:laddertracker.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     },
     {
@@ -34,50 +30,37 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 0,
+          "SelectedChildIndex": 1,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": ".gitignore",
-              "DocumentMoniker": "C:\\Users\\admin\\source\\repos\\RacePoE\\.gitignore",
-              "RelativeDocumentMoniker": ".gitignore",
-              "ToolTip": "C:\\Users\\admin\\source\\repos\\RacePoE\\.gitignore",
-              "RelativeToolTip": ".gitignore",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAJAAAAAAAAAA==",
-              "Icon": "00000000-0000-0000-0000-000000000000.000000|iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAF8SURBVDhPjVNLTgJBEG1lwpoFB3GNK9fieA48hD8iwT/ihwgSDAIHgAGXXsEV18CNzL/LquqZdsYM6kteXqcy3fWqpmpNRBgOhyABBEgpAFVKPIMUcYzUyOU\u002BXM/b2qtU3vkSfRjjZTCAMAw1A2LwzdFoBPP5HNqdzuL27n4juibWI\u002BUshBA1DIkhEx9iEorFotgslQqGYbxxAGFEqt1MxmPWJLbLZdZ\u002Bv89q5PMFPiTR6z2zdaxR0fXA0XTBcVywkb4fwHXjRteecIDNQ7UmExVYAdPcxYaqclN46na5WenMKjtlVnTYwcXlVYaDqImW9beD5N/TeGy32QHXm6hZ03ZgiSQHp2fnWQ4oBmJqWSqwAqZpZjt4aLXAD4J0VqyZsmoubfB8H2r1eoaD6NXZ9HcHO\u002BSA3f4AjifXl8rItOETM8ckB9WTWpYD9RdeZ1PWVWAHWXPQaDb59f/w8LiqHeh1pvGkCaP6qB8yXusoxmuNZ7XmII4O9vGuEF86osuDYRkpYQAAAABJRU5ErkJggg==",
-              "WhenOpened": "2026-02-13T22:16:22.926Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "LadderTracker.cs",
               "DocumentMoniker": "C:\\Users\\admin\\source\\repos\\RacePoE\\LadderTracker.cs",
               "RelativeDocumentMoniker": "LadderTracker.cs",
               "ToolTip": "C:\\Users\\admin\\source\\repos\\RacePoE\\LadderTracker.cs",
               "RelativeToolTip": "LadderTracker.cs",
-              "ViewState": "AgIAAFkAAAAAAAAAAAAAwDoAAAAmAAAAAAAAAA==",
+              "ViewState": "AgIAALEAAAAAAAAAAAAkwDoAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-13T20:23:29.755Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Overlayform.cs",
               "DocumentMoniker": "C:\\Users\\admin\\source\\repos\\RacePoE\\Overlayform.cs",
               "RelativeDocumentMoniker": "Overlayform.cs",
               "ToolTip": "C:\\Users\\admin\\source\\repos\\RacePoE\\Overlayform.cs",
               "RelativeToolTip": "Overlayform.cs",
-              "ViewState": "AgIAAMEBAAAAAAAAAAAqwOsBAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAPAAAAAAAAAAAAAkwP8AAAAiAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
               "WhenOpened": "2026-02-13T19:50:44.429Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 3,
               "Title": "Overlayform.cs [Design]",
               "DocumentMoniker": "C:\\Users\\admin\\source\\repos\\RacePoE\\Overlayform.cs",
               "RelativeDocumentMoniker": "Overlayform.cs",
@@ -89,7 +72,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "Form1.cs",
               "DocumentMoniker": "C:\\Users\\admin\\source\\repos\\RacePoE\\Form1.cs",
               "RelativeDocumentMoniker": "Form1.cs",
@@ -101,7 +84,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 4,
               "Title": "Form1.cs [Design]",
               "DocumentMoniker": "C:\\Users\\admin\\source\\repos\\RacePoE\\Form1.cs",
               "RelativeDocumentMoniker": "Form1.cs",
